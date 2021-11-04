@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <title>Exercício 6 AC2</title>
+
+        
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <link href="assets/jquery.toast.min.css" rel="stylesheet">
+
+
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUsuario">
+                Adicionar
+            </button>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                    </tr>
+                </thead>
+                <tbody id="tabUsuario">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- modal igual o do professor -->
+<div class="modal fade" id="addUsuario" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Cadastrar Usuário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="frmUsuario">
+                    <input type="hidden" id="id" name="id">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" placeholder="nome" name="Nome">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="email" placeholder="email" name="Email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha" name="Senha">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button  id="btnSalvar" data-loading-text="Salvando..." type="button" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- nao funciona sem essa parte!!-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+    crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="assets/jquery.toast.min.js"></script>
+<script>
+
+    getUsuario();        
+    $("#btnSalvar").click(function(){
+    debugger;
+        if($("#id").val() == '')
+            postUsuario();
+        else
+            putUsuario($("#id").val(),$("#frmUsuario").serialize());
+    });
+
+    $("body").on("click",".btnexcluir",function(){            
+        deleteUsuario($(this).data("id"));            
+    });
+
+    $("body").on("click",".btneditar",function(){
+        getUsuarioById($(this).data("id"));
+    });  
+    function putUsuario(id,form){
+        $.ajax({
+            url : "https://61560fe1e039a0001725a8ed.mockapi.io/api/v1/Usuario/"+id,
+            method : "PUT",
+            data : form,
+            success : function (data) {
+                $("#addUsuario").modal('toggle');
+                $.toast({text:"Salvo com sucesso!", bgColor : 'green',position:"top-right"});
+                getUsuario();
+                limparForm();
+            }
+        });
+    }  
+    function deleteUsuario(id) {
+        $.ajax({
+            url : "https://61560fe1e039a0001725a8ed.mockapi.io/api/v1/Usuario/"+id,
+            method : "DELETE",
+            success : function (data) {
+                $.toast({text:"Removido com sucesso!", bgColor : 'green',position:"top-right"});
+                getUsuario();
+            }
+        });
+    }
+
+    function getUsuario() {
+        $.get("https://61560fe1e039a0001725a8ed.mockapi.io/api/v1/Usuario", function (data) {
+            $("#tabUsuario").html('');
+            $(data).each(function (i, e) {
+                $("#tabUsuario").append("<tr><td>" + e.id + "</td><td>" + e.Nome + "</td><td>" + e.Email + "<button data-id='"+e.id+"' class='btnexcluir'>excluir</button> <button data-id='"+e.id+"' class='btneditar'>editar</button></td></tr>");
+            });
+        });
+    }
+    function getUsuarioById(id) {
+        $.get("https://61560fe1e039a0001725a8ed.mockapi.io/api/v1/Usuario/" + id, function (data) {
+           
+            $("#id").val(data.id);
+            $("#nome").val(data.Nome);
+            $("#email").val(data.Email);
+            $("#senha").val(data.Senha);
+
+            $("#addUsuario").modal('show');
+        });
+    }
+
+    function postUsuario(){           
+        $.post("https://61560fe1e039a0001725a8ed.mockapi.io/api/v1/Usuario", $("#frmUsuario").serialize(),
+        function(data) {
+            $("#addUsuario").modal('toggle');
+            $.toast({text:"Salvo com sucesso!", bgColor : 'green',position:"top-right"});
+            getUsuario();
+            limparForm();
+        });
+    }
+
+    function limparForm(){
+        $("#id").val('');
+        $("#nome").val('');
+        $("#email").val('');
+        $("#senha").val('');
+    }
+</script>
+</body>
+
+</html>
